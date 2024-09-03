@@ -44,17 +44,17 @@ services:
       - traefik.http.services.app-service.loadbalancer.server.port=3000
       - traefik.http.routers.app-router.tls.certresolver=myresolver
 
-      - traefik.http.routers.webhook-router.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`${WEBHOOK_PATH}`)
+      - traefik.http.routers.webhook-router.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`${APP_WEBHOOK_PATH}`)
       - traefik.http.routers.webhook-router.entrypoints=websecure
       - traefik.http.routers.webhook-router.service=webhook-service
       - traefik.http.services.webhook-service.loadbalancer.server.port=5000
       - traefik.http.routers.webhook-router.tls.certresolver=myresolver
     environment:
-      - WEBHOOK_PATH=${WEBHOOK_PATH:-/webhook}
-      - GITHUB_SECRET=${GITHUB_SECRET:-'your_default_secret}
-      - REPO_URL=${REPO_URL}
-      - BRANCH=${BRANCH:-main}
-      - POST_BUILD_COMMANDS=${POST_BUILD_COMMANDS:-}
+      - WEBHOOK_PATH=${APP_WEBHOOK_PATH:-/webhook}
+      - GITHUB_SECRET=${APP_GITHUB_SECRET:-'your_default_secret}
+      - REPO_URL=${APP_REPO_URL}
+      - BRANCH=${APP_BRANCH:-main}
+      - POST_BUILD_COMMANDS=${APP_POST_BUILD_COMMANDS:-}
     env_file:
       - .env.app
     restart: unless-stopped

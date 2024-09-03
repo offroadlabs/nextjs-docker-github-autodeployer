@@ -41,37 +41,32 @@ Les variables d'environnement suivantes peuvent être définies pour configurer 
 - **Exemple** : `example.com`
 - **Remarque** : Ce domaine doit pointer vers l'adresse IP de votre serveur où cette configuration Docker Compose est déployée.
 
-### `WEBHOOK_PATH`
+### `APP_WEBHOOK_PATH`
 
 - **Description** : Chemin de l'URL utilisé pour les webhooks GitHub. Ce chemin est utilisé pour configurer une route spécifique pour les requêtes webhook.
 - **Exemple** : `/webhook`
 - **Remarque** : Le chemin doit correspondre à celui configuré dans les paramètres de votre dépôt GitHub pour les webhooks.
 
-### `GITHUB_SECRET`
+### `APP_GITHUB_SECRET`
 
 - **Description** : Clé secrète utilisée pour sécuriser les webhooks GitHub. Cette clé est utilisée pour vérifier que les requêtes webhook proviennent bien de GitHub
 
-### `REPO_URL`
+### `APP_REPO_URL`
 
 - **Description** : URL du dépôt GitHub contenant le code de l'application Next.js. Ce paramètre est utilisé pour cloner ou mettre à jour le code de l'application à partir de GitHub.
 - **Exemple** : `https://github.com/votre-utilisateur/votre-repo.git`
 
-### `BRANCH`
+### `APP_BRANCH`
 
 - **Description** : Branche du dépôt GitHub à déployer. Par défaut, la branche `main` est utilisée.
 - **Exemple** : `main`
 - **Remarque** : Vous pouvez spécifier une autre branche pour tester des fonctionnalités ou déployer des versions spécifiques de votre application.
 
-### `POST_BUILD_COMMANDS`
+### `APP_POST_BUILD_COMMANDS`
 
 - **Description** : Commandes supplémentaires à exécuter après le build de l'application. Cela peut inclure des migrations de base de données, des commandes de nettoyage, etc.
 - **Exemple** : `pnpm run migrate && pnpm run build`
 - **Remarque** : `pnpm` est utilisé pour gérer les commandes et les paquets de l'application Next.js.
-
-### `DATABASE_URL`
-
-- **Description** : URL de connexion à la base de données utilisée par l'application. Ce paramètre est essentiel pour que l'application puisse se connecter à la base de données.
-- **Exemple** : `postgresql://user:password@localhost:5432/database`
 
 ## Configuration du Webhook GitHub
 
@@ -95,7 +90,7 @@ Pour que votre application Next.js se mette automatiquement à jour lorsque vous
      ```
      https://example.com/webhook/
      ```
-   - Cette URL correspond au domaine défini dans la variable `APP_DOMAIN` suivi du chemin défini dans `WEBHOOK_PATH`.
+   - Cette URL correspond au domaine défini dans la variable `APP_DOMAIN` suivi du chemin défini dans `APP_WEBHOOK_PATH`.
 
 4. **Choisissez le type de contenu** :
 
@@ -109,7 +104,7 @@ Pour que votre application Next.js se mette automatiquement à jour lorsque vous
 6. **Configurez un secret** :
 
    - Vous devez définir un secret dans le champ **Secret** pour sécuriser les requêtes du webhook.
-   - Vous devez utiliser le même que dans la variable d'env `GITHUB_SECRET`
+   - Vous devez utiliser le même que dans la variable d'env `APP_GITHUB_SECRET`
 
 7. **Enregistrez le Webhook** :
 
@@ -146,14 +141,20 @@ Ce fichier .env.app doit être placé à la racine de votre projet. Il est autom
 Voici un exemple de fichier .env que vous pouvez utiliser pour configurer Traefik :
 
 ```.env
+# Configuration de l'email pour Let's Encrypt
+ACME_EMAIL=example@example.com
+
+# Adresses IP de confiance pour les en-têtes de forwarding
+TRUSTED_IPS=127.0.0.1/32,192.168.1.1
+
 # url du dépot github à cloner
-REPO_URL=git@github.com:exemple/exemple.git
+APP_REPO_URL=git@github.com:exemple/exemple.git
 
 # Branch à cloner
-BRANCH=main
+APP_BRANCH=main
 
 # Clé ssh pour pourvoir clone le projet depuis github
-SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----
+APP_SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----
 .....
 .....
 .....
@@ -163,19 +164,13 @@ SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----
 -----END OPENSSH PRIVATE KEY-----"
 
 # Secret utilisé dans le webhook de github
-GITHUB_SECRET="mon github secret"
+APP_GITHUB_SECRET="mon github secret"
 
 # Chemin pour le webhook GitHub
-WEBHOOK_PATH=/webhook
+APP_WEBHOOK_PATH=/webhook
 
 # Commande à passer après le build des sources
-POST_BUILD_COMMANDS=pnpm prisma migrate deploy
-
-# Configuration de l'email pour Let's Encrypt
-ACME_EMAIL=example@example.com
-
-# Adresses IP de confiance pour les en-têtes de forwarding
-TRUSTED_IPS=127.0.0.1/32,192.168.1.1
+APP_POST_BUILD_COMMANDS=pnpm prisma migrate deploy
 
 # Domaine de l'application
 APP_DOMAIN=example.com

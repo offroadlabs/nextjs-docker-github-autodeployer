@@ -41,37 +41,32 @@ The following environment variables can be set to configure the behavior of Trae
 - **Example**: `example.com`
 - **Note**: This domain must point to the IP address of your server where this Docker Compose configuration is deployed.
 
-### `WEBHOOK_PATH`
+### `APP_WEBHOOK_PATH`
 
 - **Description**: URL path used for GitHub webhooks. This path is used to set up a specific route for webhook requests.
 - **Example**: `/webhook`
 - **Note**: The path must match the one configured in your GitHub repository settings for webhooks.
 
-### `GITHUB_SECRET`
+### `APP_GITHUB_SECRET`
 
 - **Description**: Secret key used to secure GitHub webhooks. This key is used to verify that webhook requests are indeed coming from GitHub.
 
-### `REPO_URL`
+### `APP_REPO_URL`
 
 - **Description**: GitHub repository URL containing the Next.js application code. This parameter is used to clone or update the application's code from GitHub.
 - **Example**: `https://github.com/your-username/your-repo.git`
 
-### `BRANCH`
+### `APP_BRANCH`
 
 - **Description**: GitHub repository branch to deploy. By default, the `main` branch is used.
 - **Example**: `main`
 - **Note**: You can specify another branch to test features or deploy specific versions of your application.
 
-### `POST_BUILD_COMMANDS`
+### `APP_POST_BUILD_COMMANDS`
 
 - **Description**: Additional commands to run after the application build. This can include database migrations, cleanup commands, etc.
 - **Example**: `pnpm run migrate && pnpm run build`
 - **Note**: `pnpm` is used to manage commands and packages for the Next.js application.
-
-### `DATABASE_URL`
-
-- **Description**: Connection URL for the database used by the application. This parameter is essential for the application to connect to the database.
-- **Example**: `postgresql://user:password@localhost:5432/database`
 
 ## GitHub Webhook Configuration
 
@@ -95,7 +90,7 @@ To automatically update your Next.js application when you push changes to your G
      ```
      https://example.com/webhook/
      ```
-   - This URL corresponds to the domain defined in the `APP_DOMAIN` variable followed by the path defined in `WEBHOOK_PATH`.
+   - This URL corresponds to the domain defined in the `APP_DOMAIN` variable followed by the path defined in `APP_WEBHOOK_PATH`.
 
 4. **Choose the content type**:
 
@@ -109,7 +104,7 @@ To automatically update your Next.js application when you push changes to your G
 6. **Set up a secret**:
 
    - You need to define a secret in the **Secret** field to secure the webhook requests.
-   - Use the same secret as in the `GITHUB_SECRET` environment variable.
+   - Use the same secret as in the `APP_GITHUB_SECRET` environment variable.
 
 7. **Save the Webhook**:
 
@@ -146,14 +141,20 @@ This `.env.app` file should be placed at the root of your project. It is automat
 Here is an example of a `.env` file that you can use to configure Traefik:
 
 ```.env
+# Email configuration for Let's Encrypt
+ACME_EMAIL=example@example.com
+
+# Trusted IP addresses for forwarding headers
+TRUSTED_IPS=127.0.0.1/32,192.168.1.1
+
 # GitHub repository URL to clone
-REPO_URL=git@github.com:example/example.git
+APP_REPO_URL=git@github.com:example/example.git
 
 # Branch to clone
-BRANCH=main
+APP_BRANCH=main
 
 # SSH key to clone the project from GitHub
-SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----
+APP_SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----
 .....
 .....
 .....
@@ -163,19 +164,13 @@ SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----
 -----END OPENSSH PRIVATE KEY-----"
 
 # Secret used in the GitHub webhook
-GITHUB_SECRET="my github secret"
+APP_GITHUB_SECRET="my github secret"
 
 # Path for the GitHub webhook
-WEBHOOK_PATH=/webhook
+APP_WEBHOOK_PATH=/webhook
 
 # Command to run after building the sources
-POST_BUILD_COMMANDS=pnpm prisma migrate deploy
-
-# Email configuration for Let's Encrypt
-ACME_EMAIL=example@example.com
-
-# Trusted IP addresses for forwarding headers
-TRUSTED_IPS=127.0.0.1/32,192.168.1.1
+APP_POST_BUILD_COMMANDS=pnpm prisma migrate deploy
 
 # Application domain
 APP_DOMAIN=example.com
