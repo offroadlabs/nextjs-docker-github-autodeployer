@@ -1,0 +1,59 @@
+volumes:
+  traefik-certificates: 
+
+services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=${ENABLE_HTTP_CHALLENGE}:-true"
+      - "--entrypoints.web.forwardedHeaders.insecure=true"
+      - "--entrypoints.websecure.forwardedHeaders.insecure=true"
+      - "--entryPoints.web.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "traefik-certificates:/letsencrypt"
+    labels:
+      - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ./nextjs
+      args:
+        - SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY:-}
+    labels:
+      - "traefik.enable=true"
+      - traefik.http.routers.app-router.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.app-router.entrypoints=websecure
+      - traefik.http.routers.app-router.service=app-service
+      - traefik.http.services.app-service.loadbalancer.server.port=3000
+      - traefik.http.routers.app-router.tls.certresolver=myresolver
+
+      - traefik.http.routers.webhook-router.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`${WEBHOOK_PATH}`)
+      - traefik.http.routers.webhook-router.entrypoints=websecure
+      - traefik.http.routers.webhook-router.service=webhook-service
+      - traefik.http.services.webhook-service.loadbalancer.server.port=5000
+      - traefik.http.routers.webhook-router.tls.certresolver=myresolver
+    environment:
+      - GITHUB_SECRET=${GITHUB_SECRET:-'your_default_secret}
+      - REPO_URL=${REPO_URL}
+      - BRANCH=${BRANCH:-main}
+      - POST_BUILD_COMMANDS=${POST_BUILD_COMMANDS:-}
+    env_file:
+      - .env.app
+    restart: unless-stopped
