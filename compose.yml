@@ -50,6 +50,7 @@ services:
       - traefik.http.services.webhook-service.loadbalancer.server.port=5000
       - traefik.http.routers.webhook-router.tls.certresolver=myresolver
     environment:
+      - WEBHOOK_PATH=${WEBHOOK_PATH}-
       - GITHUB_SECRET=${GITHUB_SECRET:-'your_default_secret}
       - REPO_URL=${REPO_URL}
       - BRANCH=${BRANCH:-main}
