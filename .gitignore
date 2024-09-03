@@ -122,5 +122,9 @@ Temporary Items
 .apdisk
 
 .env
-.env.app
+.env.*
+*.env
+
+compose*.yml
+
 /**/node_modules/

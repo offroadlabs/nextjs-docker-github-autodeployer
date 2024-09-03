@@ -35,7 +35,7 @@ services:
     build:
       context: ./nextjs
       args:
-        - SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY:-}
+        - SSH_PRIVATE_KEY=${APP_SSH_PRIVATE_KEY:-}
     labels:
       - "traefik.enable=true"
       - traefik.http.routers.app-router.rule=Host(`${APP_DOMAIN}`)
