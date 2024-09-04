@@ -125,6 +125,6 @@ Temporary Items
 .env.*
 *.env
 
-compose*.yml
+compose.*.yml
 
 /**/node_modules/
