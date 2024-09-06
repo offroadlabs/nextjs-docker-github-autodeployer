@@ -1,7 +1,30 @@
 #!/bin/bash
 
 BRANCH="${BRANCH:-main}"
-CLONE_DIR="/app"
+BASE_DIR="/app"
+CLONE_BASE="/app"
+LINK_NAME="/app/current"
+
+generate_unique_dir() {
+    echo "$CLONE_BASE/repo_$(date +%Y%m%d_%H%M%S)"
+}
+
+manage_symlink() {
+    if [ -L "$LINK_NAME" ]; then
+        CURRENT_DIR=$(readlink "$LINK_NAME")
+
+        echo "Removing existing symlink..."
+        rm "$LINK_NAME"
+
+        #if [ -d "$CURRENT_DIR" ]; then
+        #    echo "Removing previous clone directory $CURRENT_DIR..."
+        #    rm -rf "$CURRENT_DIR"
+        #fi
+    fi
+
+    echo "Creating new symlink from $1 to $LINK_NAME"
+    ln -s "$1" "$LINK_NAME"
+}
 
 manage_repo() {
     if [ -z "$REPO_URL" ]; then
@@ -9,29 +32,32 @@ manage_repo() {
         exit 1
     fi
 
-    if [ -d "$CLONE_DIR/.git" ]; then
-        echo "Repository already exists. Pulling latest changes from branch $BRANCH..."
-        git -C $CLONE_DIR fetch --all --force --prune
-        git -C $CLONE_DIR reset --hard origin/$BRANCH
-    else
-        echo "Cloning repository from $REPO_URL (branch $BRANCH)..."
-        git clone --branch $BRANCH $REPO_URL $CLONE_DIR
-    fi
+    CLONE_DIR=$(generate_unique_dir)
+    mkdir -p "$CLONE_BASE"
 
-    echo "Installing dependencies..."
-    pnpm install --frozen-lockfile
+    echo "Cloning repository from $REPO_URL (branch $BRANCH) into $CLONE_DIR..."
+    git clone --branch $BRANCH $REPO_URL $CLONE_DIR
 
-    echo "Building the Next.js application..."
-    pnpm run build
+    echo "Purge pnpm"
+    rm -rf $(pnpm store path)
+
+    echo "Installing dependencies in $CLONE_DIR..."
+    pnpm --prefix $CLONE_DIR install --frozen-lockfile
+
+    echo "Building the Next.js application in $CLONE_DIR..."
+    pnpm --prefix $CLONE_DIR run build
 
     if [ ! -z "$POST_BUILD_COMMANDS" ]; then
-        echo "Executing post-build commands..."
+        echo "Executing post-build commands in /app/current..."
+        cd "$CLONE_DIR"
         IFS='&&' read -r -a commands <<< "$POST_BUILD_COMMANDS"
         for cmd in "${commands[@]}"; do
             echo "Executing: $cmd"
             eval $cmd
         done
     fi
+
+    manage_symlink "$CLONE_DIR"
 }
 
 manage_repo

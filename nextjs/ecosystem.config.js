@@ -4,7 +4,7 @@ module.exports = {
       name: 'nextjs-app',
       script: 'pnpm',
       args: 'start',
-      cwd: '/app',
+      cwd: '/app/current',
     },
     {
       name: 'webhook-server',
